@@ -6,29 +6,31 @@
         }
 
         async function milestone(theData, getMilestones, svg, ...Args){
-
-            const dates = await theData()
-            const fiftyMiles = getMilestones(dates, 30)
-
-            console.log(Args[0])
-            let theChart = 'my milestone chart'
             const startDate = Args[0].startDate
             const endDate = Args[0].endDate
 
+            const startMonth = new Date(startDate).getMonth()
+            const endMonth = new Date(endDate).getMonth()
+            const monthRange = d3.range(startMonth, (endMonth + 1), 1)
+
+            const dates = await theData(startDate, endDate)
+            const fiftyMiles = getMilestones(dates, 30)
+            console.log(dates)
+
             const margin = { 'left': 20, 'right': 20 }
             const milestoneWidth = 900 - margin.left - margin.right
-            const monthWidth = milestoneWidth / 12
+
+            const monthWidth = milestoneWidth / monthRange.length
             const monthPadding = 5
 
-            const monthRange = d3.range(0, 12, 1)
             const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
             let x = d3.scaleLinear()
-                .domain([startDate, endDate])
+                .domain([new Date(startDate).getTime(), new Date(endDate).getTime()])
                 .range([0, milestoneWidth])
 
             let monthX = d3.scaleLinear()
-                .domain([0, 12])
+                .domain([startMonth, (endMonth + 1)])
                 .range([0, milestoneWidth])
 
             svg
@@ -55,8 +57,8 @@
                 .append("line")
                 .attr('stroke', 'blue')
                 .attr('stroke-width', '2')
-                .attr('x1', x(startDate) + margin.left)
-                .attr('x2', x(endDate) + margin.left)
+                .attr('x1', x(new Date(startDate).getTime()) + margin.left)
+                .attr('x2', x(new Date(endDate).getTime()) + margin.left)
                 .attr('y1', 60)
                 .attr('y2', 60)
 
@@ -140,8 +142,11 @@
         }
 
         async function bar(theData, svg, ...Args){
+            const startDate = new Date(Args[0].startDate).getTime()
+            const endDate = new Date(Args[0].endDate).getTime()
+            
 
-            const dates = await theData()
+            const dates = await theData(startDate, endDate)
 
             const height = Args[0].height
             const width = Args[0].width

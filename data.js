@@ -6,6 +6,7 @@ const getRunData = async (url) => {
 }
 
 const getMilestones = (data, threshold) => {
+    console.log(data)
     const fiftyMiles = []
     let milestoneCount = 1
     let runTotal = 0
@@ -38,9 +39,16 @@ const runDateValues = async (data) => data.map(dv => ({
     value: Number(dv['Distance']) * 0.6213712
 }));
 
-const theData = async () => {
+const theData = async (startDate, endDate) => {
     const data = await getRunData(running_csv)
     const parsedData = d3.csvParse(data);
     const dates = await runDateValues(parsedData)
-    return dates
+
+    ed = new Date(endDate).getTime(),
+    sd = new Date(startDate).getTime(),
+    result = dates.filter(d => {
+        var time = new Date(d.date).getTime();
+        return (sd < time && time < ed);
+    });
+    return result
 }
