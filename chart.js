@@ -8,17 +8,20 @@
         async function milestone(theData, getMilestones, svg, ...Args){
             const startDate = Args[0].startDate
             const endDate = Args[0].endDate
+            const threshold = Args[0].threshold
+            const margin = Args[0].margin
+            const svgWidth = Args[0].svgWidth
+            const svgHeight = Args[0].svgHeight
 
             const startMonth = new Date(startDate).getMonth()
             const endMonth = new Date(endDate).getMonth()
             const monthRange = d3.range(startMonth, (endMonth + 1), 1)
 
             const dates = await theData(startDate, endDate)
-            const fiftyMiles = getMilestones(dates, 30)
+            const fiftyMiles = getMilestones(dates, threshold)
             console.log(dates)
 
-            const margin = { 'left': 20, 'right': 20 }
-            const milestoneWidth = 900 - margin.left - margin.right
+            const milestoneWidth = svgWidth - margin.left - margin.right
 
             const monthWidth = milestoneWidth / monthRange.length
             const monthPadding = 5
@@ -34,8 +37,10 @@
                 .range([0, milestoneWidth])
 
             svg
-                .attr('width', 900)
-                .attr('height', 500)
+                .attr('width', svgWidth)
+                .attr('height', svgHeight)
+                .style('margin-top', margin.top)
+                .style('margin-bottom', margin.bottom)
                 .style('background', '#fff')
 
             svg
@@ -150,9 +155,10 @@
 
             const height = Args[0].height
             const width = Args[0].width
+            const margin = Args[0].margin
 
             //  the size of the overall svg element
-            const margin = { top: 10, right: 20, bottom: 35, left: 0 };
+            // const margin = { top: 10, right: 20, bottom: 35, left: 0 };
             const widthBar = width - margin.left - margin.right;
             const heightBar = height - margin.top - margin.bottom;
 
@@ -172,6 +178,7 @@
             svg
                 .attr('width', widthBar + margin.left + margin.right)
                 .attr('height', heightBar + margin.top + margin.bottom)
+                .style('margin-top', margin.top)
                 .style('background', '#fff')
                 .append('g')
                 .attr('transform', `translate(${margin.left}, ${margin.top})`);
