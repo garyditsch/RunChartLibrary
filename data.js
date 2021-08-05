@@ -6,7 +6,6 @@ const getRunData = async (url) => {
 }
 
 const getMilestones = (data, threshold) => {
-    console.log(data)
     const fiftyMiles = []
     let milestoneCount = 1
     let runTotal = 0
