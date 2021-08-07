@@ -217,6 +217,13 @@
 
             const dates = await theData(startDate, endDate)
 
+            // function to return week label
+            const formatDay = d =>
+                ["Sun", "", "Tue", "", "Thu", "", "Sat"][d.getUTCDay()];
+            
+            // return an index representing day of week: Ex: 0 = Sunday, 6 = Saturday
+            const countDay = d => d.getUTCDay();
+
             // had to reduce the dates to get totals for each day
             // https://stackoverflow.com/questions/47893084/sum-the-values-for-the-same-dates
             // had some issues with the dates as objects, but changing to string and comparing worked
@@ -245,8 +252,8 @@
 
             console.log(months)
 
-            const monthOrdered = months.sort((a, b) => (a.values[0].date > b.values[0].date ) ? 1 : ((b.values[0].date > a.values[0].date) ? -1 : 0))
-            console.log(monthOrdered)
+            months.sort((a, b) => (a.values[0].date > b.values[0].date ) ? 1 : ((b.values[0].date > a.values[0].date) ? -1 : 0))
+            // console.log(monthOrdered)
         
             // get array of all values
             const values = reducedDates.map(c => c.value);
@@ -256,11 +263,40 @@
             const minValue = d3.min(values);
         
             // set constants, yearHeight is * 7 for days of week
-            const cellSize = 20;
-            const yearHeight = cellSize * 7;
+            const cellSize = 15;
+            const yearHeight = cellSize * 5 + 25;
+
+            // https://www.geeksforgeeks.org/d3-js-d3-utcsunday-function/
+            // returns array of all the sundays from a start/end date
+            const timeWeek = d3.utcSunday;
+            const formatDate = d3.utcFormat("%x");
+
+            svg.append('g')
+                .attr("text-anchor", "end")
+                .selectAll("text")
+                .data(d3.range(7).map(i => new Date(1995, 0, i)))
+                .join("text")
+                .attr("x", 30)
+                .attr("y", d => ((countDay(d) + 0.5) * cellSize) + 30)
+                .attr("dy", "0.31em")
+                .attr("font-size", 12)
+                .text(formatDay);
+
+            svg
+                .append("g")
+                .selectAll('text')
+                .data(months)
+                .enter().append('text')
+                .attr('x', (d, i) => (yearHeight * i + cellSize * 1.5) + 10 )
+                .attr('y', 15)
+                .attr('height', 45)
+                .attr('width', 50)
+                .text(d => { return d.key })
+                .style('fill', '#000')
+                .style('border', '2px solid #cccccc')
         
             // adding g element to svg
-            const group = svg.append("g");  
+            const group = svg.append("g")
         
             // adds g element for each month with data to svg
             // gives the y axis value to move g element based on month index within data
@@ -273,29 +309,6 @@
                     (d, i) => `translate(${yearHeight * i + cellSize * 1.5}, 0)`
                 );
         
-            // add the month label with positioning and style
-            month
-                .append("text")
-                .attr("x", -5)
-                .attr("y", -35)
-                .attr("text-anchor", "end")
-                .attr("font-size", 16)
-                .attr("font-weight", 550)
-                .attr("transform", "rotate(270)")
-                    .text(d => { return d.key + '  ' + '[' + (d.values.reduce((prev, cur) => { return prev + parseFloat(cur.value)}, 0 )).toFixed(2) + ']' });
-        
-            // function to return week label
-            const formatDay = d =>
-                ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getUTCDay()];
-            
-            // return an index representing day of week: Ex: 0 = Sunday, 6 = Saturday
-            const countDay = d => d.getUTCDay();
-        
-            // https://www.geeksforgeeks.org/d3-js-d3-utcsunday-function/
-            // returns array of all the sundays from a start/end date
-            const timeWeek = d3.utcSunday;
-            const formatDate = d3.utcFormat("%x");
-        
         
             // http://using-d3js.com/04_05_sequential_scales.html
             const colorFn = d3
@@ -303,20 +316,6 @@
                     // .scaleSequential(d3.interpolateCool)
                     .domain([Math.floor(minValue), Math.ceil(maxValue)]);
             const format = d3.format("+.2%");
-        
-            
-            // adds group element that displays add the day of week label 
-            month
-                .append("g")
-                .attr("text-anchor", "end")
-                .selectAll("text")
-                .data(d3.range(7).map(i => new Date(1995, 0, i)))
-                .join("text")
-                .attr("x", -5)
-                .attr("y", d => (countDay(d) + 0.5) * cellSize)
-                .attr("dy", "0.31em")
-                .attr("font-size", 12)
-                .text(formatDay);
         
             month
                 .append("g")
@@ -329,7 +328,7 @@
                     "x",
                     (d, i) => timeWeek.count(d3.utcMonth(d.date), d.date) * cellSize + 10
                 )
-                .attr("y", d => countDay(d.date) * cellSize + 0.5)
+                .attr("y", d => (countDay(d.date) * cellSize + 0.5) + 30)
                 .attr("fill", d => colorFn(d.value))
                 .append("title")
                     .text(d => `${formatDate(d.date)}: ${d.value.toFixed(2)}`);
