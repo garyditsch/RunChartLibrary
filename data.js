@@ -35,12 +35,16 @@ const running_csv = "https://gist.githubusercontent.com/garyditsch/7e8b585557461
 // TODO: bring in other data for additional data sources
 const runDateValues = async (data) => data.map(dv => ({
     date: d3.timeDay(new Date(dv['Activity Date'])),
-    value: Number(dv['Distance']) * 0.6213712
+    value: Number(dv['Distance']) * 0.6213712,
+    minutesOfDayStart: (((new Date(dv['Activity Date']).getHours() * 60) + (new Date(dv['Activity Date']).getMinutes()) - new Date(dv['Activity Date']).getTimezoneOffset()) / 60 ),
+    speed: 60 / (dv["Average Speed"] * 2.2369)
+
 }));
 
 const theData = async (startDate, endDate) => {
     const data = await getRunData(running_csv)
     const parsedData = d3.csvParse(data);
+    // console.log(parsedData)
     const dates = await runDateValues(parsedData)
 
     ed = new Date(endDate).getTime(),

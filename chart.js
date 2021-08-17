@@ -3,7 +3,8 @@
         let charts = {
             drawMilestone: milestone,
             drawBar: bar,
-            drawCalendar: calendar
+            drawCalendar: calendar,
+            drawBubble: bubble
         }
 
         async function milestone(theData, getMilestones, svg, ...Args){
@@ -216,6 +217,7 @@
             const endDate = new Date(Args[0].endDate).getTime()
 
             const dates = await theData(startDate, endDate)
+            // console.log(dates)
 
             // function to return week label
             const formatDay = d =>
@@ -250,7 +252,7 @@
                 .key(d => d.date.toLocaleString('default', { month: 'long' }))
                 .entries(reducedDates)
 
-            console.log(months)
+            // console.log(months)
 
             months.sort((a, b) => (a.values[0].date > b.values[0].date ) ? 1 : ((b.values[0].date > a.values[0].date) ? -1 : 0))
             // console.log(monthOrdered)
@@ -332,6 +334,97 @@
                 .attr("fill", d => colorFn(d.value))
                 .append("title")
                     .text(d => `${formatDate(d.date)}: ${d.value.toFixed(2)}`);
+        }
+
+        console.log('start of bubble chart')
+        async function bubble(theData, svg, ...Args){
+            const startDate = new Date(Args[0].startDate).getTime()
+            const endDate = new Date(Args[0].endDate).getTime()
+            const dates = await theData(startDate, endDate)
+            const width = 600 - 100
+            const height = 400
+
+            var x = d3.scaleLinear()
+                .domain([0, 24])
+                .range([ 0, width ])
+
+            var y = d3.scaleLinear()
+                .domain([0, 13])
+                .range([ height, 0]);
+
+            var z = d3.scaleLinear()
+                .domain([d3.min(dates, d => d.speed), d3.max(dates, d => d.speed)])
+                .range([3, 9]);
+
+            const radiusArray = dates.map((d) => {
+                 return parseInt(z(d.speed).toFixed(0))
+            })
+
+            const uniqueArray = [...new Set(radiusArray)].sort()
+
+            const speedArray = uniqueArray.map((num) => {
+                return z.invert(num).toFixed(2)
+            })
+  
+            svg.append("g")
+                .attr("transform", "translate(50," + height + ")")
+                .call(d3.axisBottom(x));
+
+            svg.append("g")
+                .attr("transform", "translate(50, 0)")
+                .call(d3.axisLeft(y));
+
+            // Add dots
+            svg.append('g')
+            .selectAll("circle")
+            .data(dates)
+            .enter()
+            .append("circle")
+                .attr("cx", function (d) { return x(d.minutesOfDayStart) + 50; } )
+                .attr("cy", function (d) { return y(d.value); } )
+                .attr("r", function (d) { return  z(d.speed).toFixed(0); } )
+                .style("fill", "#69b3a2")
+                .style("opacity", "0.7")
+
+            //Create X axis label   
+            svg.append("text")
+            .attr("x", width / 2 )
+            .attr("y",  y(0) + 40 )
+            .style("text-anchor", "middle")
+            .text("Time of Day");
+
+            //Create Y axis label
+            svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", x(0) + 10 )
+            .attr("x",0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Distance"); 
+
+            svg.append('g')
+            .selectAll("circle")
+            .data(uniqueArray)
+            .enter()
+            .append("circle")
+                .style("fill", "#69b3a2")
+                .attr("r", function (d) { return d})
+                .attr(
+                    "transform", 
+                    (d, i) => `translate(570, ${i * 25 + 10})`
+                )
+
+            svg.append('g')
+            .selectAll("text")
+            .data(speedArray)
+            .enter()
+            .append("text")
+                .attr(
+                    "transform", 
+                    (d, i) => `translate(590, ${i * 25 + 15})`
+                )
+            .text((d, i) => `${d} min/mile`)
+            .style("fill", "#69b3a2")
         }
 
         return charts;
